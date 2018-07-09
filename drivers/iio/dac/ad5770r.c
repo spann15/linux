@@ -23,6 +23,7 @@
 /* AD5770R configuration registers */
 #define AD5770R_CHANNEL_CONFIG		0x14
 #define AD5770R_OUTPUT_RANGE(ch)	(0x15 + (ch))
+#define AD5770R_FILTER_RESISTOR(ch)	(0x1D + (ch))
 #define AD5770R_REFERENCE		0x1B
 #define AD5770R_DAC_LSB(ch)		(0x26 + 2 * (ch)
 #define AD5770R_DAC_MSB(ch)		(0x27 + 2 * (ch))
@@ -74,6 +75,15 @@ enum ad5770r_ref_v {
 	AD5770R_INT_1_25_V_OUT_ON,
 	AD5770R_EXT_1_25_V,
 	AD5770R_INT_1_25_V_OUT_OFF
+};
+
+enum ad5770r_output_filter_resistor {
+	AD5770R_FILTER_60_OHM = 0x0,
+	AD5770R_FILTER_5_6_KOHM = 0x5,
+	AD5770R_FILTER_11_2_KOHM,
+	AD5770R_FILTER_22_2_KOHM,
+	AD5770R_FILTER_44_4_KOHM,
+	AD5770R_FILTER_104_KOHM,
 };
 
 struct ad5770r_out_range {
@@ -131,6 +141,19 @@ static struct ad5770r_output_modes ad5770r_rng_tbl[] = {
 	{ 4, AD5770R_CH_HIGH_RANGE, 0, 100 },
 	{ 5, AD5770R_CH_LOW_RANGE, 0, 45 },
 	{ 5, AD5770R_CH_HIGH_RANGE, 0, 100 },
+};
+
+static const unsigned int ad5770r_filter_freqs[] = {
+	153, 357, 715, 1400, 2800, 262000,
+};
+
+static const unsigned int ad5770r_filter_reg_vals[] = {
+	AD5770R_FILTER_104_KOHM,
+	AD5770R_FILTER_44_4_KOHM,
+	AD5770R_FILTER_22_2_KOHM,
+	AD5770R_FILTER_11_2_KOHM,
+	AD5770R_FILTER_5_6_KOHM,
+	AD5770R_FILTER_60_OHM
 };
 
 static int ad5770r_set_output_mode(struct ad5770r_state *st,
@@ -215,6 +238,48 @@ static int ad5770r_get_range(struct ad5770r_state *st,
 	return -EINVAL;
 }
 
+static int ad5770r_get_filter_freq(struct iio_dev *indio_dev,
+				   const struct iio_chan_spec *chan, int *freq)
+{
+	struct ad5770r_state *st = iio_priv(indio_dev);
+	int ret;
+	unsigned int regval, i;
+
+	ret = regmap_read(st->regmap,
+			  AD5770R_FILTER_RESISTOR(chan->channel), &regval);
+	if (ret < 0)
+		return ret;
+
+	for (i = 0; i < ARRAY_SIZE(ad5770r_filter_reg_vals); i++)
+		if (regval == ad5770r_filter_reg_vals[i])
+			break;
+	if (i == ARRAY_SIZE(ad5770r_filter_reg_vals))
+		return -EINVAL;
+
+	*freq = ad5770r_filter_freqs[i];
+
+	return IIO_VAL_INT;
+}
+
+static int ad5770r_set_filter_freq(struct iio_dev *indio_dev,
+				   const struct iio_chan_spec *chan,
+				   unsigned int freq)
+{
+	struct ad5770r_state *st = iio_priv(indio_dev);
+	unsigned int regval, i;
+
+	for (i = 0; i < ARRAY_SIZE(ad5770r_filter_freqs); i++)
+		if (ad5770r_filter_freqs[i] >= freq)
+			break;
+	if (i == ARRAY_SIZE(ad5770r_filter_freqs))
+		return -EINVAL;
+
+	regval = ad5770r_filter_reg_vals[i];
+
+	return regmap_write(st->regmap, AD5770R_FILTER_RESISTOR(chan->channel),
+			    regval);
+}
+
 static int ad5770r_read_raw(struct iio_dev *indio_dev,
 			    struct iio_chan_spec const *chan,
 			    int *val, int *val2, long info)
@@ -241,6 +306,8 @@ static int ad5770r_read_raw(struct iio_dev *indio_dev,
 		*val = max - min;
 		*val2 = 13;
 		return IIO_VAL_FRACTIONAL_LOG2;
+	case IIO_CHAN_INFO_LOW_PASS_FILTER_3DB_FREQUENCY:
+		return ad5770r_get_filter_freq(indio_dev, chan, val);
 	default:
 		return -EINVAL;
 	}
@@ -259,9 +326,27 @@ static int ad5770r_write_raw(struct iio_dev *indio_dev,
 		buf[1] = (val & 0x3F) << 2;
 		return regmap_bulk_write(st->regmap, chan->address,
 					 buf, ARRAY_SIZE(buf));
+	case IIO_CHAN_INFO_LOW_PASS_FILTER_3DB_FREQUENCY:
+		return ad5770r_set_filter_freq(indio_dev, chan, val);
 	default:
 		return -EINVAL;
 	}
+}
+
+static int ad5770r_read_freq_avail(struct iio_dev *indio_dev,
+			  struct iio_chan_spec const *chan,
+			  const int **vals, int *type, int *length,
+			  long mask)
+{
+	switch (mask) {
+	case IIO_CHAN_INFO_LOW_PASS_FILTER_3DB_FREQUENCY:
+		*type = IIO_VAL_INT;
+		*vals = ad5770r_filter_freqs;
+		*length = ARRAY_SIZE(ad5770r_filter_freqs);
+		return IIO_AVAIL_LIST;
+	}
+
+	return -EINVAL;
 }
 
 static int ad5770r_reg_access(struct iio_dev *indio_dev,
@@ -280,6 +365,7 @@ static int ad5770r_reg_access(struct iio_dev *indio_dev,
 static const struct iio_info ad5770r_info = {
 	.read_raw = ad5770r_read_raw,
 	.write_raw = ad5770r_write_raw,
+	.read_avail = ad5770r_read_freq_avail,
 	.debugfs_reg_access = &ad5770r_reg_access,
 };
 
@@ -359,15 +445,18 @@ static const struct iio_chan_spec_ext_info ad5770r_ext_info[] = {
 	{ }
 };
 
-#define AD5770R_IDAC_CHANNEL(index, reg) {			\
-	.type = IIO_CURRENT,					\
-	.address = reg,						\
-	.indexed = 1,						\
-	.channel = index,					\
-	.output = 1,						\
-	.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |		\
-			BIT(IIO_CHAN_INFO_SCALE),		\
-	.ext_info = ad5770r_ext_info,				\
+#define AD5770R_IDAC_CHANNEL(index, reg) {				\
+	.type = IIO_CURRENT,						\
+	.address = reg,							\
+	.indexed = 1,							\
+	.channel = index,						\
+	.output = 1,							\
+	.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |			\
+		BIT(IIO_CHAN_INFO_SCALE) |				\
+		BIT(IIO_CHAN_INFO_LOW_PASS_FILTER_3DB_FREQUENCY),	\
+	.info_mask_shared_by_type_available =				\
+		BIT(IIO_CHAN_INFO_LOW_PASS_FILTER_3DB_FREQUENCY),	\
+	.ext_info = ad5770r_ext_info,					\
 }
 
 static const struct iio_chan_spec ad5770r_channels[] = {

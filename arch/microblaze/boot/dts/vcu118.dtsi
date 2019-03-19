@@ -185,19 +185,18 @@
 			device_type = "memory";
 			reg = <0x80000000 0x80000000>;
 		};
-		axi_ethernet: ethernet@40c00000 {
-			axistream-connected = <&axi_ethernet_fifo>;
-			axistream-control-connected = <&axi_ethernet_fifo>;
+		axi_ethernet: ethernet@40e00000 {
+			axistream-connected = <&axi_ethernet_dma>;
+			axistream-control-connected = <&axi_ethernet_dma>;
 			clock-frequency = <100000000>;
 			compatible = "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
-			interrupt-names = "mac_irq", "interrupt";
 			interrupt-parent = <&axi_intc>;
-			interrupts = <3 0 1 2>;
+			interrupts = <1 2>;
 			local-mac-address = [00 0a 35 00 00 01];
-			phy-handle = <&phy1>;
+			phy-handle = <&phy0>;
 			phy-mode = "sgmii";
-			reg = <0x40c00000 0x1000>;
+			reg = <0x40e00000 0x40000>;
 			xlnx = <0x0>;
 			xlnx,axiliteclkrate = <0x0>;
 			xlnx,axisclkrate = <0x0>;
@@ -207,63 +206,41 @@
 			xlnx,gtinex = <0x0>;
 			xlnx,gtlocation = <0x0>;
 			xlnx,gtrefclksrc = <0x0>;
+			xlnx,include-dre ;
 			xlnx,instantiatebitslice0 = <0x0>;
 			xlnx,phy-type = <0x4>;
 			xlnx,phyaddr = <0x1>;
 			xlnx,rable = <0x0>;
-			xlnx,rxcsum = <0x0>;
+			xlnx,rxcsum = <0x2>;
 			xlnx,rxlane0-placement = <0x0>;
 			xlnx,rxlane1-placement = <0x0>;
-			xlnx,rxmem = <0x1000>;
+			xlnx,rxmem = <0x2000>;
 			xlnx,rxnibblebitslice0used = <0x0>;
-			xlnx,tx-in-upper-nibble = <0x0>;
-			xlnx,txcsum = <0x0>;
+			xlnx,tx-in-upper-nibble = <0x1>;
+			xlnx,txcsum = <0x2>;
 			xlnx,txlane0-placement = <0x0>;
 			xlnx,txlane1-placement = <0x0>;
 			axi_ethernet_mdio: mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
-				phy1: phy@1 {
+				phy0: phy@3 {
 					device_type = "ethernet-phy";
-					reg = <1>;
+					reg = <3>;
 				};
 			};
 		};
-		axi_ethernet_fifo: axi_fifo_mm_s@44a00000 {
-			compatible = "xlnx,axi-fifo-mm-s-4.1";
-			interrupt-names = "interrupt";
+		axi_ethernet_dma: dma@41e10000 {
+			#dma-cells = <1>;
+			axistream-connected = <&axi_ethernet>;
+			axistream-control-connected = <&axi_ethernet>;
+			clock-frequency = <100000000>;
+			clock-names = "s_axi_lite_aclk";
+			clocks = <&clk_bus_0>;
+			compatible = "xlnx,eth-dma";
 			interrupt-parent = <&axi_intc>;
-			interrupts = <2 2>;
-			reg = <0x44a00000 0x1000>;
-			xlnx,axi-str-rxd-protocol = "XIL_AXI_STREAM_ETH_DATA";
-			xlnx,axi-str-rxd-tdata-width = <0x20>;
-			xlnx,axi-str-txc-protocol = "XIL_AXI_STREAM_ETH_CTRL";
-			xlnx,axi-str-txc-tdata-width = <0x20>;
-			xlnx,axi-str-txd-protocol = "XIL_AXI_STREAM_ETH_DATA";
-			xlnx,axi-str-txd-tdata-width = <0x20>;
-			xlnx,axis-tdest-width = <0x4>;
-			xlnx,axis-tid-width = <0x4>;
-			xlnx,axis-tuser-width = <0x4>;
-			xlnx,data-interface-type = <0x0>;
-			xlnx,has-axis-tdest = <0x0>;
-			xlnx,has-axis-tid = <0x0>;
-			xlnx,has-axis-tkeep = <0x1>;
-			xlnx,has-axis-tstrb = <0x0>;
-			xlnx,has-axis-tuser = <0x0>;
-			xlnx,rx-fifo-depth = <0x1000>;
-			xlnx,rx-fifo-pe-threshold = <0xa>;
-			xlnx,rx-fifo-pf-threshold = <0xfa0>;
-			xlnx,s-axi-id-width = <0x4>;
-			xlnx,s-axi4-data-width = <0x20>;
-			xlnx,select-xpm = <0x0>;
-			xlnx,tx-fifo-depth = <0x1000>;
-			xlnx,tx-fifo-pe-threshold = <0xa>;
-			xlnx,tx-fifo-pf-threshold = <0xfa0>;
-			xlnx,use-rx-cut-through = <0x0>;
-			xlnx,use-rx-data = <0x1>;
-			xlnx,use-tx-ctrl = <0x1>;
-			xlnx,use-tx-cut-through = <0x0>;
-			xlnx,use-tx-data = <0x1>;
+			interrupts = <2 2 3 2>;
+			reg = <0x41e10000 0x1000>;
+			xlnx,include-dre ;
 		};
 		axi_gpio: gpio@40000000 {
 			#gpio-cells = <2>;

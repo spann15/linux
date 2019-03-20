@@ -185,18 +185,19 @@
 			device_type = "memory";
 			reg = <0x80000000 0x80000000>;
 		};
-		axi_ethernet: ethernet@40e00000 {
+		axi_ethernet: ethernet@40c00000 {
 			axistream-connected = <&axi_ethernet_dma>;
 			axistream-control-connected = <&axi_ethernet_dma>;
 			clock-frequency = <100000000>;
 			compatible = "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
+			interrupt-names = "mac_irq", "interrupt";
 			interrupt-parent = <&axi_intc>;
 			interrupts = <1 2>;
-			local-mac-address = [00 0a 35 00 00 01];
-			phy-handle = <&phy0>;
+			local-mac-address = [00 0a 35 00 00 00];
+			phy-handle = <&phy3>;
 			phy-mode = "sgmii";
-			reg = <0x40e00000 0x40000>;
+			reg = <0x40c00000 0x1000>;
 			xlnx = <0x0>;
 			xlnx,axiliteclkrate = <0x0>;
 			xlnx,axisclkrate = <0x0>;
@@ -216,15 +217,16 @@
 			xlnx,rxlane1-placement = <0x0>;
 			xlnx,rxmem = <0x2000>;
 			xlnx,rxnibblebitslice0used = <0x0>;
-			xlnx,tx-in-upper-nibble = <0x1>;
+			xlnx,tx-in-upper-nibble = <0x0>;
 			xlnx,txcsum = <0x2>;
 			xlnx,txlane0-placement = <0x0>;
 			xlnx,txlane1-placement = <0x0>;
 			axi_ethernet_mdio: mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
-				phy0: phy@3 {
+				phy3: phy@3 {
 					device_type = "ethernet-phy";
+					ti,fifo-depth = <0x1>;
 					reg = <3>;
 				};
 			};
@@ -237,6 +239,7 @@
 			clock-names = "s_axi_lite_aclk";
 			clocks = <&clk_bus_0>;
 			compatible = "xlnx,eth-dma";
+			interrupt-names = "mm2s_introut", "s2mm_introut";
 			interrupt-parent = <&axi_intc>;
 			interrupts = <2 2 3 2>;
 			reg = <0x41e10000 0x1000>;

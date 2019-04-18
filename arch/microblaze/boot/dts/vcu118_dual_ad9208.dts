@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: GPL-2.0
 /dts-v1/;
 /include/ "vcu118.dtsi"
 
@@ -101,6 +101,7 @@
 		dmas = <&rx_dma 0>;
 		dma-names = "rx";
 		spibus-connected = <&adc0_ad9208>;
+		slavecore-reg = <0x44b10000 0x1000>;
 	};
 
 	rx_ad9208_1_tpl_core_tpl: axi-ad9208-1-hpc@44b10000 {

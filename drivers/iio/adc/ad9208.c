@@ -1,9 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Driver for AD9208 and similar high-speed Analog-to-Digital converters
  *
- * Copyright 2018 Analog Devices Inc.
- *
- * Licensed under the GPL-2.
+ * Copyright 2019 Analog Devices Inc.
  */
 
 #include <linux/clk.h>
@@ -29,9 +28,12 @@
 #include <dt-bindings/iio/adc/adi,ad9208.h>
 
 #define CHIPID_AD9208			0xDF
+#define CHIPID_MASK			0xFF
+#define ID_DUAL				BIT(31)
 
 enum {
 	ID_AD9208,
+	ID_AD9208_X2,
 };
 
 enum {
@@ -570,7 +572,7 @@ static const struct iio_event_spec ad9208_events[] = {
 	  .channel = _chan,						\
 	  .info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SCALE) |	\
 			BIT(IIO_CHAN_INFO_SAMP_FREQ),			\
-	  .ext_info = axiadc_ext_info,			\
+	  .ext_info = axiadc_ext_info,					\
 	  .scan_index = _si,						\
 	  .scan_type = {						\
 			.sign = _sign,					\
@@ -580,6 +582,19 @@ static const struct iio_event_spec ad9208_events[] = {
 	  },								\
 	  .event_spec = _ev,						\
 	  .num_event_specs = _nb_ev,					\
+	}
+
+#define AD9208_MC_CHAN(_chan, _si, _bits, _sign, _shift)		\
+	{ .type = IIO_VOLTAGE,						\
+		.indexed = 1,						\
+		.channel = _chan,					\
+		.scan_index = _si,					\
+		.scan_type = {						\
+			.sign = _sign,					\
+			.realbits = _bits,				\
+			.storagebits = 16,				\
+			.shift = _shift,				\
+		},							\
 	}
 
 static struct axiadc_chip_info axiadc_chip_info_tbl[] = {
@@ -605,6 +620,39 @@ static struct axiadc_chip_info axiadc_chip_info_tbl[] = {
 			ad9208_events, ARRAY_SIZE(ad9208_events)),
 		.channel[7] = AD9208_CHAN(7, 7, 14, 'S', 0,
 			ad9208_events, ARRAY_SIZE(ad9208_events)),
+	},
+	[ID_AD9208_X2] = {
+		.name = "AD9208 DUAL (MASTER with DMA)",
+		.max_rate = 3000000000UL,
+		.scale_table = ad9208_scale_table,
+		.num_scales = ARRAY_SIZE(ad9208_scale_table),
+		.num_channels = 2,
+		.num_shadow_slave_channels = 2,
+		.channel[0] = AD9208_CHAN(0, 0, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[1] = AD9208_CHAN(1, 1, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[2] = AD9208_CHAN(2, 2, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[3] = AD9208_CHAN(3, 3, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[4] = AD9208_CHAN(4, 4, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[5] = AD9208_CHAN(5, 5, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[6] = AD9208_CHAN(6, 6, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+		.channel[7] = AD9208_CHAN(7, 7, 14, 'S', 0,
+			ad9208_events, ARRAY_SIZE(ad9208_events)),
+
+		.channel[8] = AD9208_MC_CHAN(8, 8, 14, 'S', 0),
+		.channel[9] = AD9208_MC_CHAN(9, 9, 14, 'S', 0),
+		.channel[10] = AD9208_MC_CHAN(10, 10, 14, 'S', 0),
+		.channel[11] = AD9208_MC_CHAN(11, 11, 14, 'S', 0),
+		.channel[12] = AD9208_MC_CHAN(12, 12, 14, 'S', 0),
+		.channel[13] = AD9208_MC_CHAN(13, 13, 14, 'S', 0),
+		.channel[14] = AD9208_MC_CHAN(14, 14, 14, 'S', 0),
+		.channel[15] = AD9208_MC_CHAN(15, 15, 14, 'S', 0),
 	},
 };
 
@@ -1149,11 +1197,21 @@ static int ad9208_setup_chip_info_tbl(struct ad9208_phy *phy, u32 id)
 
 	phy->chip_info.num_channels = m;
 
-	for (i = 0; i < m; i++) {
+	if (axiadc_chip_info_tbl[id].num_shadow_slave_channels)
+		phy->chip_info.num_channels *=2;
+
+	for (i = 0; i < phy->chip_info.num_channels; i++) {
 		phy->chip_info.channel[i].scan_type.realbits =
 			phy->jesd_param.jesd_N;
 		phy->chip_info.channel[i].scan_type.storagebits =
 			phy->jesd_param.jesd_NP;
+
+		if (i >= m) { /* Shadow channels */
+			phy->chip_info.channel[i].info_mask_shared_by_type = 0;
+			phy->chip_info.channel[i].ext_info = NULL;
+			phy->chip_info.channel[i].event_spec = NULL;
+			phy->chip_info.channel[i].num_event_specs = 0;
+		}
 	}
 
 	return 0;
@@ -1165,6 +1223,7 @@ static int ad9208_probe(struct spi_device *spi)
 	struct ad9208_phy *phy;
 	adi_chip_id_t chip_id;
 	u8 api_rev[3];
+	u32 spi_id;
 	int ret;
 
 	conv = devm_kzalloc(&spi->dev, sizeof(*conv), GFP_KERNEL);
@@ -1217,15 +1276,17 @@ static int ad9208_probe(struct spi_device *spi)
 		return -ENODEV;
 	}
 
+	spi_id = spi_get_device_id(spi)->driver_data;
 	conv->id = chip_id.prod_id;
-	if (conv->id != spi_get_device_id(spi)->driver_data) {
+	if (conv->id != (spi_id & CHIPID_MASK)) {
 		dev_err(&spi->dev, "Unrecognized CHIP_ID 0x%X\n", conv->id);
 		return -ENODEV;
 	}
 
 	switch (conv->id) {
 	case CHIPID_AD9208:
-		ret = ad9208_setup_chip_info_tbl(phy, ID_AD9208);
+		ret = ad9208_setup_chip_info_tbl(phy, (spi_id & ID_DUAL) ?
+						 ID_AD9208_X2 : ID_AD9208);
 		if (ret)
 			break;
 		conv->chip_info = &phy->chip_info;
@@ -1255,7 +1316,8 @@ static int ad9208_probe(struct spi_device *spi)
 	if (conv->id == CHIPID_AD9208) {
 		ret = ad9208_request_fd_irqs(conv);
 		if (ret < 0)
-			return ret;
+			dev_warn(&spi->dev,
+				 "Failed to request FastDetect IRQs (%d)", ret);
 	}
 
 	ad9208_get_revision(&phy->ad9208, &api_rev[0],
@@ -1288,14 +1350,22 @@ static int ad9208_remove(struct spi_device *spi)
 
 static const struct spi_device_id ad9208_id[] = {
 	{ "ad9208", CHIPID_AD9208 },
+	{ "ad9208x2", CHIPID_AD9208 | ID_DUAL},
 	{}
 };
 MODULE_DEVICE_TABLE(spi, ad9208_id);
 
+static const struct of_device_id ad9208_of_match[] = {
+	{ .compatible = "adi,ad9208" },
+	{ .compatible = "adi,ad9208x2" },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, ad9208_of_match);
+
 static struct spi_driver ad9208_driver = {
 	.driver = {
 		   .name = "ad9208",
-		   .owner = THIS_MODULE,
+		   .of_match_table = of_match_ptr(ad9208_of_match),
 	},
 	.probe = ad9208_probe,
 	.remove = ad9208_remove,

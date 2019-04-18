@@ -94,7 +94,7 @@
 		};
 
 		adc0_ad9208: ad9208@1 {
-			compatible = "adi,ad9208";
+			compatible = "adi,ad9208x2";
 
 			spi-cpol;
 			spi-cpha;

@@ -40,7 +40,7 @@
 
 		adi,octets-per-frame = <1>;
 		adi,frames-per-multiframe = <32>;
-		adi,subclass = <0>;
+		adi,subclass = <1>;
 
 		#clock-cells = <0>;
 		clock-output-names = "jesd_adc0_lane_clk";
@@ -73,7 +73,7 @@
 
 		adi,octets-per-frame = <1>;
 		adi,frames-per-multiframe = <32>;
-		adi,subclass = <0>;
+		adi,subclass = <1>;
 
 		#clock-cells = <0>;
 		clock-output-names = "jesd_adc1_lane_clk";

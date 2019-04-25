@@ -22,7 +22,7 @@
 			adi,pll2-output-frequency = <3000000000>;
 
 			adi,sysref-timer-divider = <1024>;
-			adi,pulse-generator-mode = <HMC7044_PULSE_GEN_LEVEL_SENSITIVE>;
+			adi,pulse-generator-mode = <HMC7044_PULSE_GEN_CONT_PULSE>;
 
 			adi,clkin0-buffer-mode = <0x07>;
 			adi,oscin-buffer-mode = <0x03>;
@@ -122,8 +122,8 @@
 			//adi,sysref-clk-edge-falling-enable
 			adi,sysref-pos-window-skew = <0>;
 			adi,sysref-neg-window-skew = <0>;
-			adi,sysref-mode = <AD9208_SYSREF_CONT>;
-			adi,sysref-nshot-ignore-count = <0>;
+			adi,sysref-mode = <AD9208_SYSREF_ONESHOT>;
+			adi,sysref-nshot-ignore-count = <15>;
 
 			/* JESD204 parameters */
 
@@ -135,7 +135,7 @@
 			adi,converters-per-device = <2>;
 			adi,control-bits-per-sample = <0>;
 			adi,lanes-per-device = <8>;
-			adi,subclass = <0>;
+			adi,subclass = <1>;
 
 			/* DDC setup */
 
@@ -184,8 +184,8 @@
 			//adi,sysref-clk-edge-falling-enable
 			adi,sysref-pos-window-skew = <0>;
 			adi,sysref-neg-window-skew = <0>;
-			adi,sysref-mode = <AD9208_SYSREF_CONT>;
-			adi,sysref-nshot-ignore-count = <0>;
+			adi,sysref-mode = <AD9208_SYSREF_ONESHOT>;
+			adi,sysref-nshot-ignore-count = <15>;
 
 			/* JESD204 parameters */
 
@@ -197,7 +197,7 @@
 			adi,converters-per-device = <2>;
 			adi,control-bits-per-sample = <0>;
 			adi,lanes-per-device = <8>;
-			adi,subclass = <0>;
+			adi,subclass = <1>;
 
 			/* DDC setup */
 

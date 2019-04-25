@@ -713,6 +713,8 @@ static int ad9208_setup(struct spi_device *spi, bool ad9234)
 	if (ret)
 		return ret;
 
+	ad9208_adc_set_channel_select(&phy->ad9208, AD9208_ADC_CH_ALL);
+
 	ret = ad9208_set_pdn_pin_mode(&phy->ad9208, phy->powerdown_pin_en,
 				      phy->powerdown_mode);
 	if (ret < 0) {

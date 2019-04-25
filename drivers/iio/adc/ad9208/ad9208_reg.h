@@ -65,6 +65,7 @@ int ad9208_is_sync_spi_update_enabled(ad9208_handle_t *h, uint8_t *enabled);
 #define AD9208_IP_CLK_PHASE_ADJ_REG   0x0109
 #define AD9208_IP_CLK_PHASE_ADJ(x)    (((x)&0xF)<<0)
 
+#define AD9208_IP_CLK_STAT_REG         0x011B
 #define AD9208_IP_CLK_DCS1_REG         0x011C
 #define AD9208_IP_CLK_DCS2_REG         0x011E
 

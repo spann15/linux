@@ -16,6 +16,7 @@
 #include <linux/of.h>
 #include <linux/slab.h>
 #include <linux/spi/spi.h>
+#include <linux/debugfs.h>
 
 #include <linux/iio/events.h>
 #include <linux/iio/iio.h>
@@ -915,6 +916,46 @@ static int ad9208_setup(struct spi_device *spi, bool ad9234)
 	return 0;
 }
 
+static int ad9208_status_show(struct seq_file *file, void *offset)
+{
+	struct axiadc_converter *conv = spi_get_drvdata(file->private);
+	struct ad9208_phy *phy = conv->phy;
+	const char *hold_setup_desc;
+	u8 hold, setup, phase, stat;
+	int val;
+
+	val = ad9208_spi_read(conv->spi, AD9208_IP_CLK_STAT_REG);
+	seq_printf(file, "Input clock %sdetected\n",
+		   (val & 0x01) ? "" : "not ");
+
+	ad9208_jesd_get_pll_status(&phy->ad9208, &stat);
+	seq_printf(file, "JESD204 PLL is %slocked\n",
+		   (stat & AD9208_JESD_PLL_LOCK_STAT) ? "" : "not ");
+
+	val = ad9208_spi_read(conv->spi, AD9208_SYSREF_STAT_2_REG);
+	seq_printf(file, "SYSREF counter: %d\n", val);
+
+	ad9208_jesd_syref_status_get(&phy->ad9208, &hold, &setup, &phase);
+	if (hold == 0x0 && setup <= 0x7)
+		hold_setup_desc = "Possible setup error";
+	else if (hold <= 0x8 && setup == 0x8)
+		hold_setup_desc = "No setup or hold error (best hold margin)";
+	else if (hold == 0x8 && setup >= 0x9)
+		hold_setup_desc = "No setup or hold error (best setup and hold margin)";
+	else if (hold == 0x8 && setup == 0x0)
+		hold_setup_desc = "No setup or hold error (best setup margin)";
+	else if (hold >= 0x9 && setup == 0x0)
+		hold_setup_desc = "Possible hold error";
+	else
+		hold_setup_desc = "Possible setup or hold error";
+
+	seq_printf(file, "SYSREF hold/setup status: %s (%x/%x)\n"
+		   "SYSREF divider phase %d * 1/2 cycles delayed\n",
+		   hold_setup_desc, hold, setup, phase);
+
+	return 0;
+}
+
 static int ad9208_read_raw(struct iio_dev *indio_dev,
 	const struct iio_chan_spec *chan, int *val, int *val2, long info)
 {
@@ -1027,6 +1068,24 @@ static int ad9208_post_setup(struct iio_dev *indio_dev)
 		axiadc_write(st, ADI_REG_CHAN_CNTRL(i),
 			     ADI_FORMAT_SIGNEXT | ADI_FORMAT_ENABLE |
 			     ADI_IQCOR_ENB | ADI_ENABLE);
+	}
+
+	return 0;
+}
+
+static int ad9208_post_iio_register(struct iio_dev *indio_dev)
+{
+	struct axiadc_state *st = iio_priv(indio_dev);
+	struct axiadc_converter *conv = iio_device_get_drvdata(indio_dev);
+
+	if (iio_get_debugfs_dentry(indio_dev)) {
+		struct dentry *stats;
+		stats = debugfs_create_devm_seqfile(&conv->spi->dev, "status",
+					iio_get_debugfs_dentry(indio_dev),
+					ad9208_status_show);
+		if (PTR_ERR_OR_ZERO(stats))
+			dev_err(&conv->spi->dev,
+				"Failed to create debugfs entry");
 	}
 
 	return 0;
@@ -1311,6 +1370,7 @@ static int ad9208_probe(struct spi_device *spi)
 	conv->read_event_config = ad9208_read_thresh_en,
 	conv->write_event_config = ad9208_write_thresh_en,
 	conv->post_setup = ad9208_post_setup;
+	conv->post_iio_register = ad9208_post_iio_register;
 	conv->set_pnsel = ad9208_set_pnsel;
 
 	if (conv->id == CHIPID_AD9208) {

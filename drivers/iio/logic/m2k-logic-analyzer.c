@@ -490,14 +490,12 @@ static const struct iio_dma_buffer_ops m2k_la_dma_buffer_ops = {
 };
 
 static const struct iio_info m2k_la_iio_info = {
-	.driver_module = THIS_MODULE,
 	.read_raw = m2k_la_read_raw,
 	.write_raw = m2k_la_write_raw,
 /*	.debugfs_reg_access = m2k_la_reg_access,*/
 };
 
 static const struct iio_info m2k_la_txrx_iio_info = {
-	.driver_module = THIS_MODULE,
 	.read_raw = m2k_la_txrx_read_raw,
 	.write_raw = m2k_la_txrx_write_raw,
 };

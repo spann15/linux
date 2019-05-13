@@ -2609,7 +2609,6 @@ static const struct iio_info ad9371_phy_info = {
 	.write_raw = &ad9371_phy_write_raw,
 	.debugfs_reg_access = &ad9371_phy_reg_access,
 	.attrs = &ad9371_phy_attribute_group,
-	.driver_module = THIS_MODULE,
 };
 
 static const struct iio_info ad9375_phy_info = {
@@ -2617,7 +2616,6 @@ static const struct iio_info ad9375_phy_info = {
 	.write_raw = &ad9371_phy_write_raw,
 	.debugfs_reg_access = &ad9371_phy_reg_access,
 	.attrs = &ad9375_phy_attribute_group,
-	.driver_module = THIS_MODULE,
 };
 
 #ifdef CONFIG_OF

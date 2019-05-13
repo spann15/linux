@@ -2723,7 +2723,6 @@ static const struct iio_info adrv9009_phy_info = {
 	.write_raw = &adrv9009_phy_write_raw,
 	.debugfs_reg_access = &adrv9009_phy_reg_access,
 	.attrs = &adrv9009_phy_attribute_group,
-	.driver_module = THIS_MODULE,
 };
 
 static const struct iio_chan_spec adrv90081_phy_chan[] = {
@@ -2867,7 +2866,6 @@ static const struct iio_info adrv90081_phy_info = {
 	.write_raw = &adrv9009_phy_write_raw,
 	.debugfs_reg_access = &adrv9009_phy_reg_access,
 	.attrs = &adrv90081_phy_attribute_group,
-	.driver_module = THIS_MODULE,
 };
 
 static const struct iio_chan_spec adrv90082_phy_chan[] = {
@@ -3034,7 +3032,6 @@ static const struct iio_info adrv90082_phy_info = {
 	.write_raw = &adrv9009_phy_write_raw,
 	.debugfs_reg_access = &adrv9009_phy_reg_access,
 	.attrs = &adrv90082_phy_attribute_group,
-	.driver_module = THIS_MODULE,
 };
 
 static ssize_t adrv9009_debugfs_read(struct file *file, char __user *userbuf,

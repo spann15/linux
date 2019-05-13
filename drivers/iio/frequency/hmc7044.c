@@ -370,7 +370,6 @@ static const struct iio_info hmc7044_iio_info = {
 	.read_raw = &hmc7044_read_raw,
 	.write_raw = &hmc7044_write_raw,
 	.debugfs_reg_access = &hmc7044_reg_access,
-	.driver_module = THIS_MODULE,
 };
 
 static long hmc7044_get_clk_attr(struct clk_hw *hw,

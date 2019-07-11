@@ -63,7 +63,6 @@
 #define	ZYNQMP_PM_CAPABILITY_ACCESS	0x1U
 #define	ZYNQMP_PM_CAPABILITY_CONTEXT	0x2U
 #define	ZYNQMP_PM_CAPABILITY_WAKEUP	0x4U
-#define	ZYNQMP_PM_CAPABILITY_POWER	0x8U
 
 /* Feature check status */
 #define PM_FEATURE_INVALID		-1
@@ -168,6 +167,9 @@ enum pm_ioctl_id {
 	/* Set healthy bit value*/
 	IOCTL_SET_BOOT_HEALTH_STATUS,
 	IOCTL_AFI,
+	/* Probe counter read/write */
+	IOCTL_PROBE_COUNTER_READ,
+	IOCTL_PROBE_COUNTER_WRITE,
 };
 
 enum pm_query_id {

@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Driver for the Analog Devices AXI-DMAC core
  *
- * Copyright 2013-2015 Analog Devices Inc.
+ * Copyright 2013-2019 Analog Devices Inc.
  *  Author: Lars-Peter Clausen <lars@metafoo.de>
- *
- * Licensed under the GPL-2.
  */
 
 #include <linux/clk.h>
@@ -21,6 +20,7 @@
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
 #include <linux/slab.h>
+#include <linux/fpga/adi-axi-common.h>
 
 #include <dt-bindings/dma/axi-dmac.h>
 
@@ -44,8 +44,6 @@
  * device side is a dedicated data bus only connected to a single peripheral
  * there is no address than can or needs to be configured for the device side.
  */
-
-#define AXI_DMAC_REG_VERSION		0x00
 
 #define AXI_DMAC_REG_IRQ_MASK		0x80
 #define AXI_DMAC_REG_IRQ_PENDING	0x84
@@ -386,6 +384,9 @@ static bool axi_dmac_transfer_done(struct axi_dmac_chan *chan,
 			start_next = true;
 		}
 
+		if (sg->partial_len)
+			axi_dmac_compute_residue(chan, active);
+
 		if (active->cyclic)
 			vchan_cyclic_callback(&active->vdesc);
 
@@ -395,8 +396,6 @@ static bool axi_dmac_transfer_done(struct axi_dmac_chan *chan,
 				active->num_completed = 0; /* wrap around */
 			} else {
 				list_del(&active->vdesc.node);
-				if (sg->partial_len)
-					axi_dmac_compute_residue(chan, active);
 				vchan_cookie_complete(&active->vdesc);
 				active = axi_dmac_active_desc(chan);
 			}
@@ -743,13 +742,15 @@ static bool axi_dmac_regmap_rdwr(struct device *dev, unsigned int reg)
 	case AXI_DMAC_REG_DEST_STRIDE:
 	case AXI_DMAC_REG_SRC_STRIDE:
 	case AXI_DMAC_REG_TRANSFER_DONE:
-	case AXI_DMAC_REG_ACTIVE_TRANSFER_ID :
+	case AXI_DMAC_REG_ACTIVE_TRANSFER_ID:
 	case AXI_DMAC_REG_STATUS:
 	case AXI_DMAC_REG_CURRENT_SRC_ADDR:
 	case AXI_DMAC_REG_CURRENT_DEST_ADDR:
 	case AXI_DMAC_REG_DBG0:
 	case AXI_DMAC_REG_DBG1:
 	case AXI_DMAC_REG_DBG2:
+	case AXI_DMAC_REG_PARTIAL_XFER_LEN:
+	case AXI_DMAC_REG_PARTIAL_XFER_ID:
 		return true;
 	default:
 		return false;
@@ -760,7 +761,7 @@ static const struct regmap_config axi_dmac_regmap_config = {
 	.reg_bits = 32,
 	.val_bits = 32,
 	.reg_stride = 4,
-	.max_register = AXI_DMAC_REG_DBG2,
+	.max_register = AXI_DMAC_REG_PARTIAL_XFER_ID,
 	.readable_reg = axi_dmac_regmap_rdwr,
 	.writeable_reg = axi_dmac_regmap_rdwr,
 };
@@ -825,10 +826,9 @@ static int axi_dmac_parse_chan_dt(struct device_node *of_chan,
 static int axi_dmac_detect_caps(struct axi_dmac *dmac)
 {
 	struct axi_dmac_chan *chan = &dmac->chan;
-	unsigned int version, version_minor;
+	unsigned int version;
 
-	version = axi_dmac_read(dmac, AXI_DMAC_REG_VERSION);
-	version_minor = version & 0xff00;
+	version = axi_dmac_read(dmac, ADI_AXI_REG_VERSION);
 
 	axi_dmac_write(dmac, AXI_DMAC_REG_FLAGS, AXI_DMAC_FLAG_CYCLIC);
 	if (axi_dmac_read(dmac, AXI_DMAC_REG_FLAGS) == AXI_DMAC_FLAG_CYCLIC)
@@ -859,12 +859,13 @@ static int axi_dmac_detect_caps(struct axi_dmac *dmac)
 		return -ENODEV;
 	}
 
-	if (version_minor >= 0x0200)
+	if (version >= ADI_AXI_PCORE_VER(4, 2, 'a'))
 		chan->hw_partial_xfer = true;
 
-	if (version_minor >= 0x0100) {
+	if (version >= ADI_AXI_PCORE_VER(4, 1, 'a')) {
 		axi_dmac_write(dmac, AXI_DMAC_REG_X_LENGTH, 0x00);
-		chan->length_align_mask = axi_dmac_read(dmac, AXI_DMAC_REG_X_LENGTH);
+		chan->length_align_mask =
+			axi_dmac_read(dmac, AXI_DMAC_REG_X_LENGTH);
 	} else {
 		chan->length_align_mask = chan->address_align_mask;
 	}

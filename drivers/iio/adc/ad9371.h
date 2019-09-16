@@ -116,7 +116,8 @@ enum ad9371_iio_voltage_out {
 };
 
 enum ad937x_device_id {
-	ID_AD9371 = 0x0103,
+	ID_AD9371   = 0x0103,
+	ID_AD9371_1 = 0x0105,
 	ID_AD9375 = 0x0506,
 	ID_AD9375_ALT = 0x0502,
 };

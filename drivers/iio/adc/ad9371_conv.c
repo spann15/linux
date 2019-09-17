@@ -83,6 +83,18 @@ static const struct axiadc_chip_info axiadc_chip_info_tbl[] = {
 		.channel[2] = AIM_CHAN(1, IIO_MOD_I, 2, 16, 'S'),
 		.channel[3] = AIM_CHAN(1, IIO_MOD_Q, 3, 16, 'S'),
 	},
+	//WT
+	[ID_AD9371_1] = {
+		.name = "AD9371-1",
+		.max_rate = 245760000,
+		.max_testmode = 0,
+		.num_channels = 4,
+		.scan_masks = ad9371_available_scan_masks,
+		.channel[0] = AIM_CHAN(0, IIO_MOD_I, 0, 16, 'S'),
+		.channel[1] = AIM_CHAN(0, IIO_MOD_Q, 1, 16, 'S'),
+		.channel[2] = AIM_CHAN(1, IIO_MOD_I, 2, 16, 'S'),
+		.channel[3] = AIM_CHAN(1, IIO_MOD_Q, 3, 16, 'S'),
+	},
 
 
 };
@@ -207,8 +219,8 @@ int ad9371_register_axi_converter(struct ad9371_rf_phy *phy)
 	conv = devm_kzalloc(&spi->dev, sizeof(*conv), GFP_KERNEL);
 	if (conv == NULL)
 		return -ENOMEM;
-
-	conv->chip_info = &axiadc_chip_info_tbl[ID_AD9371];
+       //WT
+	conv->chip_info = &axiadc_chip_info_tbl[phy->spi_device_id];
 	conv->write_raw = ad9371_write_raw;
 	conv->read_raw = ad9371_read_raw;
 	conv->post_setup = ad9371_post_setup;

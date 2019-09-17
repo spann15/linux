@@ -4105,7 +4105,7 @@ static int ad9371_probe(struct spi_device *spi)
 	phy->indio_dev = indio_dev;
 	phy->spi = spi;
 	//WT
-        phy->spi_device_id = id;
+        phy->device_id = id;
 	ret = ad9371_alloc_mykonos_device(phy);
 	if (ret < 0)
 		return ret;

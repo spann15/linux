@@ -4084,7 +4084,8 @@ static int ad9371_probe(struct spi_device *spi)
 	mykonosBuild_t buildType;
 	u32 api_vers[4];
 	bool clk_is_tx = 0;
-
+	//WT
+        int id = spi_get_device_id(spi)->driver_data;
 	dev_info(&spi->dev, "%s : enter", __func__);
 
 	clk = devm_clk_get(&spi->dev, "jesd_rx_clk");
@@ -4103,7 +4104,8 @@ static int ad9371_probe(struct spi_device *spi)
 	phy = iio_priv(indio_dev);
 	phy->indio_dev = indio_dev;
 	phy->spi = spi;
-
+	//WT
+        phy->spi_device_id = id;
 	ret = ad9371_alloc_mykonos_device(phy);
 	if (ret < 0)
 		return ret;

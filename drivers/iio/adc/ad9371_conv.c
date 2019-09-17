@@ -220,7 +220,7 @@ int ad9371_register_axi_converter(struct ad9371_rf_phy *phy)
 	if (conv == NULL)
 		return -ENOMEM;
        //WT
-	conv->chip_info = &axiadc_chip_info_tbl[phy->spi_device_id];
+	conv->chip_info = &axiadc_chip_info_tbl[phy->device_id];
 	conv->write_raw = ad9371_write_raw;
 	conv->read_raw = ad9371_read_raw;
 	conv->post_setup = ad9371_post_setup;

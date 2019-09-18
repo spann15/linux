@@ -409,7 +409,7 @@ static int adxcvr_clk_register(struct device *dev, struct device_node *node,
 	unsigned int num_clks;
 	unsigned int i;
 	int ret;
-
+printk(KERN_INFO "clk0\n");
 	num_clks = of_property_count_strings(node, "clock-output-names");
 	if (num_clks < 1 || num_clks > 2)
 		return -EINVAL;
@@ -420,7 +420,7 @@ static int adxcvr_clk_register(struct device *dev, struct device_node *node,
 		if (ret < 0)
 			return ret;
 	}
-
+printk(KERN_INFO "clk1\n");
 	init.name = clk_names[0];
 	init.ops = &clkout_ops;
 	init.flags = CLK_SET_RATE_GATE | CLK_SET_RATE_PARENT;
@@ -434,11 +434,11 @@ static int adxcvr_clk_register(struct device *dev, struct device_node *node,
 	st->clks[0] = devm_clk_register(dev, &st->lane_clk_hw);
 	if (IS_ERR(st->clks[0]))
 		return PTR_ERR(st->clks[0]);
-
+printk(KERN_INFO "clk2\n");
 	/* Backwards compatibility */
 	if (num_clks == 1)
 		return of_clk_add_provider(node, of_clk_src_simple_get, st->clks[0]);
-
+printk(KERN_INFO "clk3\n");
 	switch (st->out_clk_sel) {
 	case 1:
 	case 2:
@@ -462,16 +462,16 @@ static int adxcvr_clk_register(struct device *dev, struct device_node *node,
 
 	st->clks[1] = clk_register_fixed_factor(dev, clk_names[1],
 		parent_name, 0, out_clk_multiplier, out_clk_divider);
-
+printk(KERN_INFO "clk4\n");
 	st->clk_lookup.clks = st->clks;
 	st->clk_lookup.clk_num = ARRAY_SIZE(st->clks);
 
 	ret = of_clk_add_provider(node, of_clk_src_onecell_get,
 		&st->clk_lookup);
-
+printk(KERN_INFO "clk5\n");
 	if (ret)
 		clk_unregister_fixed_factor(st->clks[1]);
-
+printk(KERN_INFO "clk6\n");
 	return ret;
 }
 

@@ -637,14 +637,14 @@ printk(KERN_INFO "alloc6\n");
 	}
 	st->xcvr.encoding = ENC_8B10B;
 	st->xcvr.refclk_ppm = PM_200; /* TODO use clock accuracy */
-
+printk(KERN_INFO "alloc7\n");
 	adxcvr_write(st, ADXCVR_REG_RESETN, 0);
-
+printk(KERN_INFO "alloc8\n");
 	adxcvr_write(st, ADXCVR_REG_CONTROL,
 				 ((st->lpm_enable ? ADXCVR_LPM_DFE_N : 0) |
 				  ADXCVR_SYSCLK_SEL(st->sys_clk_sel) |
 				  ADXCVR_OUTCLK_SEL(st->out_clk_sel)));
-
+printk(KERN_INFO "alloc9\n");
 	if (!st->tx_enable) {
 		for (i = 0; i < st->num_lanes; i++) {
 			xilinx_xcvr_configure_lpm_dfe_mode(&st->xcvr,
@@ -652,19 +652,19 @@ printk(KERN_INFO "alloc6\n");
 							   st->lpm_enable);
 		}
 	}
-
+printk(KERN_INFO "alloc10\n");
 	adxcvr_enforce_settings(st);
-
+printk(KERN_INFO "alloc11\n");
 	ret = adxcvr_clk_register(&pdev->dev, np, __clk_get_name(st->conv_clk));
 	if (ret)
 		return ret;
-
+printk(KERN_INFO "alloc12\n");
 	ret = adxcvr_eyescan_register(st);
 	if (ret)
 		return ret;
-
+printk(KERN_INFO "alloc13\n");
 	device_create_file(st->dev, &dev_attr_reg_access);
-
+printk(KERN_INFO "alloc14\n");
 	dev_info(&pdev->dev, "AXI-ADXCVR-%s (%d.%.2d.%c) using %s at 0x%08llX mapped to 0x%p. Number of lanes: %d.",
 		st->tx_enable ? "TX" : "RX",
 		ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version),

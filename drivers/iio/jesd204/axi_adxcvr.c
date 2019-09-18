@@ -560,7 +560,7 @@ static int adxcvr_probe(struct platform_device *pdev)
 		if (PTR_ERR(st->lane_rate_div40_clk) != -ENOENT)
 			return PTR_ERR(st->lane_rate_div40_clk);
 	}
-
+printk(KERN_INFO "alloc2\n");
 	if (clk_is_match(st->conv_clk, st->lane_rate_div40_clk)) {
 		/*
 		 * In this case we need to make sure that the reference clock
@@ -578,18 +578,18 @@ static int adxcvr_probe(struct platform_device *pdev)
 
 	st->xcvr.dev = &pdev->dev;
 	st->xcvr.drp_ops = &adxcvr_drp_ops;
-
+printk(KERN_INFO "alloc3\n");
 	ret = adxcvr_parse_dt(st, np);
 	if (ret < 0)
 		goto disable_unprepare;
-
+printk(KERN_INFO "alloc4\n");
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	st->regs = devm_ioremap_resource(&pdev->dev, mem);
 	if (IS_ERR(st->regs)) {
 		ret = PTR_ERR(st->regs);
 		goto disable_unprepare;
 	}
-
+printk(KERN_INFO "alloc5\n");
 	st->dev = &pdev->dev;
 	st->xcvr.version = adxcvr_read(st, ADI_AXI_REG_VERSION);
 	if (ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version) > 0x10)
@@ -601,7 +601,7 @@ static int adxcvr_probe(struct platform_device *pdev)
 	st->num_lanes = synth_conf & 0xff;
 
 	xcvr_type = (synth_conf >> 16) & 0xf;
-
+printk(KERN_INFO "alloc6\n");
 	/* Ensure compliance with legacy xcvr type */
 	if (ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version) <= 0x10) {
 		switch (xcvr_type) {

@@ -545,11 +545,12 @@ static int adxcvr_probe(struct platform_device *pdev)
 	struct resource *mem; /* IO mem resources */
 	unsigned int synth_conf, xcvr_type;
 	int i, ret;
-
+	//WT
+       printk(KERN_INFO "alloc0\n");
 	st = devm_kzalloc(&pdev->dev, sizeof(*st), GFP_KERNEL);
 	if (!st)
 		return -ENOMEM;
-
+       printk(KERN_INFO "alloc1\n");
 	st->conv_clk = devm_clk_get(&pdev->dev, "conv");
 	if (IS_ERR(st->conv_clk))
 		return PTR_ERR(st->conv_clk);

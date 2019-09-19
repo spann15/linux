@@ -771,6 +771,7 @@ static int ad9371_setup(struct ad9371_rf_phy *phy)
 	/*******************************************************/
 	/**** Perform MultiChip Sync (MCS) on Mykonos Device ***/
 	/*******************************************************/
+	printk(KERN_INFO "mcsStatus0=%d\n",mcsStatus);
 	ret = MYKONOS_enableMultichipSync(mykDevice, 1, NULL);
 
 	ad9371_sysref_req(phy, SYSREF_PULSE);
@@ -779,8 +780,10 @@ static int ad9371_setup(struct ad9371_rf_phy *phy)
 	/*******************/
 	/***** MCS ****/
 	/*******************/
+	printk(KERN_INFO "mcsStatus1=%d\n",mcsStatus);
 	ret = MYKONOS_enableMultichipSync(mykDevice, 0, &mcsStatus);
-
+	//WT
+        printk(KERN_INFO "mcsStatus2=%d\n",mcsStatus);
 	if ((mcsStatus & 0x0B) != 0x0B) {
 		/*** < MCS failed - ensure MCS before proceeding - user code here > ***/
 		dev_err(&phy->spi->dev, "MCS failed");

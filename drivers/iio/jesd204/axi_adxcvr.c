@@ -409,7 +409,7 @@ static int adxcvr_clk_register(struct device *dev, struct device_node *node,
 	unsigned int num_clks;
 	unsigned int i;
 	int ret;
-printk(KERN_INFO "clk0\n");
+
 	num_clks = of_property_count_strings(node, "clock-output-names");
 	if (num_clks < 1 || num_clks > 2)
 		return -EINVAL;
@@ -420,7 +420,7 @@ printk(KERN_INFO "clk0\n");
 		if (ret < 0)
 			return ret;
 	}
-printk(KERN_INFO "clk1\n");
+
 	init.name = clk_names[0];
 	init.ops = &clkout_ops;
 	init.flags = CLK_SET_RATE_GATE | CLK_SET_RATE_PARENT;
@@ -434,11 +434,11 @@ printk(KERN_INFO "clk1\n");
 	st->clks[0] = devm_clk_register(dev, &st->lane_clk_hw);
 	if (IS_ERR(st->clks[0]))
 		return PTR_ERR(st->clks[0]);
-printk(KERN_INFO "clk2\n");
+
 	/* Backwards compatibility */
 	if (num_clks == 1)
 		return of_clk_add_provider(node, of_clk_src_simple_get, st->clks[0]);
-printk(KERN_INFO "clk3\n");
+
 	switch (st->out_clk_sel) {
 	case 1:
 	case 2:
@@ -462,16 +462,16 @@ printk(KERN_INFO "clk3\n");
 
 	st->clks[1] = clk_register_fixed_factor(dev, clk_names[1],
 		parent_name, 0, out_clk_multiplier, out_clk_divider);
-printk(KERN_INFO "clk4\n");
+
 	st->clk_lookup.clks = st->clks;
 	st->clk_lookup.clk_num = ARRAY_SIZE(st->clks);
 
 	ret = of_clk_add_provider(node, of_clk_src_onecell_get,
 		&st->clk_lookup);
-printk(KERN_INFO "clk5\n");
+
 	if (ret)
 		clk_unregister_fixed_factor(st->clks[1]);
-printk(KERN_INFO "clk6\n");
+printk(KERN_INFO " test_clk6\n");
 	return ret;
 }
 
@@ -550,7 +550,7 @@ static int adxcvr_probe(struct platform_device *pdev)
 	st = devm_kzalloc(&pdev->dev, sizeof(*st), GFP_KERNEL);
 	if (!st)
 		return -ENOMEM;
-       printk(KERN_INFO "alloc1\n");
+      
 	st->conv_clk = devm_clk_get(&pdev->dev, "conv");
 	if (IS_ERR(st->conv_clk))
 		return PTR_ERR(st->conv_clk);
@@ -560,7 +560,7 @@ static int adxcvr_probe(struct platform_device *pdev)
 		if (PTR_ERR(st->lane_rate_div40_clk) != -ENOENT)
 			return PTR_ERR(st->lane_rate_div40_clk);
 	}
-printk(KERN_INFO "alloc2\n");
+
 	if (clk_is_match(st->conv_clk, st->lane_rate_div40_clk)) {
 		/*
 		 * In this case we need to make sure that the reference clock
@@ -578,18 +578,18 @@ printk(KERN_INFO "alloc2\n");
 
 	st->xcvr.dev = &pdev->dev;
 	st->xcvr.drp_ops = &adxcvr_drp_ops;
-printk(KERN_INFO "alloc3\n");
+
 	ret = adxcvr_parse_dt(st, np);
 	if (ret < 0)
 		goto disable_unprepare;
-printk(KERN_INFO "alloc4\n");
+
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	st->regs = devm_ioremap_resource(&pdev->dev, mem);
 	if (IS_ERR(st->regs)) {
 		ret = PTR_ERR(st->regs);
 		goto disable_unprepare;
 	}
-printk(KERN_INFO "alloc5\n");
+
 	st->dev = &pdev->dev;
 	st->xcvr.version = adxcvr_read(st, ADI_AXI_REG_VERSION);
 	if (ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version) > 0x10)
@@ -601,7 +601,7 @@ printk(KERN_INFO "alloc5\n");
 	st->num_lanes = synth_conf & 0xff;
 
 	xcvr_type = (synth_conf >> 16) & 0xf;
-printk(KERN_INFO "alloc6\n");
+
 	/* Ensure compliance with legacy xcvr type */
 	if (ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version) <= 0x10) {
 		switch (xcvr_type) {
@@ -637,14 +637,14 @@ printk(KERN_INFO "alloc6\n");
 	}
 	st->xcvr.encoding = ENC_8B10B;
 	st->xcvr.refclk_ppm = PM_200; /* TODO use clock accuracy */
-printk(KERN_INFO "alloc7\n");
+
 	adxcvr_write(st, ADXCVR_REG_RESETN, 0);
-printk(KERN_INFO "alloc8\n");
+
 	adxcvr_write(st, ADXCVR_REG_CONTROL,
 				 ((st->lpm_enable ? ADXCVR_LPM_DFE_N : 0) |
 				  ADXCVR_SYSCLK_SEL(st->sys_clk_sel) |
 				  ADXCVR_OUTCLK_SEL(st->out_clk_sel)));
-printk(KERN_INFO "alloc9\n");
+
 	if (!st->tx_enable) {
 		for (i = 0; i < st->num_lanes; i++) {
 			xilinx_xcvr_configure_lpm_dfe_mode(&st->xcvr,
@@ -652,19 +652,19 @@ printk(KERN_INFO "alloc9\n");
 							   st->lpm_enable);
 		}
 	}
-printk(KERN_INFO "alloc10\n");
+
 	adxcvr_enforce_settings(st);
-printk(KERN_INFO "alloc11\n");
+
 	ret = adxcvr_clk_register(&pdev->dev, np, __clk_get_name(st->conv_clk));
 	if (ret)
 		return ret;
-printk(KERN_INFO "alloc12\n");
+
 	ret = adxcvr_eyescan_register(st);
 	if (ret)
 		return ret;
-printk(KERN_INFO "alloc13\n");
+
 	device_create_file(st->dev, &dev_attr_reg_access);
-printk(KERN_INFO "alloc14\n");
+
 	dev_info(&pdev->dev, "AXI-ADXCVR-%s (%d.%.2d.%c) using %s at 0x%08llX mapped to 0x%p. Number of lanes: %d.",
 		st->tx_enable ? "TX" : "RX",
 		ADI_AXI_PCORE_VER_MAJOR(st->xcvr.version),

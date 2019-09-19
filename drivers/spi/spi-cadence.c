@@ -102,8 +102,9 @@
 #define CDNS_SPI_FIFO_DEPTH	128
 
 /* Default number of chip select lines */
-#define CDNS_SPI_DEFAULT_NUM_CS		4
-
+//WT
+//#define CDNS_SPI_DEFAULT_NUM_CS		4
+#define CDNS_SPI_DEFAULT_NUM_CS		8
 /**
  * struct cdns_spi - This definition defines spi driver instance
  * @regs:		Virtual address of the SPI controller registers

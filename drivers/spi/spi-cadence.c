@@ -57,8 +57,7 @@
 #define CDNS_SPI_CR_SSFORCE	0x00004000 /* Manual SS Enable Mask */
 #define CDNS_SPI_CR_BAUD_DIV_4	0x00000008 /* Default Baud Div Mask */
 //WT
-#define CDNS_SPI_CR_DEFAULT	(CDNS_SPI_CR_MSTREN | \
-                                        CDNS_SPI_CR_PERI_SEL | \
+#define CDNS_SPI_CR_DEFAULT	(CDNS_SPI_CR_MSTREN | \                                       
 					CDNS_SPI_CR_SSCTRL | \
 					CDNS_SPI_CR_SSFORCE | \
 					CDNS_SPI_CR_BAUD_DIV_4)
@@ -102,9 +101,9 @@
 #define CDNS_SPI_FIFO_DEPTH	128
 
 /* Default number of chip select lines */
-//WT
-//#define CDNS_SPI_DEFAULT_NUM_CS		4
-#define CDNS_SPI_DEFAULT_NUM_CS		8
+
+#define CDNS_SPI_DEFAULT_NUM_CS		4
+
 /**
  * struct cdns_spi - This definition defines spi driver instance
  * @regs:		Virtual address of the SPI controller registers

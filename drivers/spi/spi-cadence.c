@@ -56,7 +56,9 @@
 #define CDNS_SPI_CR_MANSTRTEN	0x00008000 /* Manual TX Enable Mask */
 #define CDNS_SPI_CR_SSFORCE	0x00004000 /* Manual SS Enable Mask */
 #define CDNS_SPI_CR_BAUD_DIV_4	0x00000008 /* Default Baud Div Mask */
+//WT
 #define CDNS_SPI_CR_DEFAULT	(CDNS_SPI_CR_MSTREN | \
+                                        CDNS_SPI_CR_PERI_SEL | \
 					CDNS_SPI_CR_SSCTRL | \
 					CDNS_SPI_CR_SSFORCE | \
 					CDNS_SPI_CR_BAUD_DIV_4)

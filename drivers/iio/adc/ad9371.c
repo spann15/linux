@@ -4108,6 +4108,8 @@ static int ad9371_probe(struct spi_device *spi)
 	phy->indio_dev = indio_dev;
 	phy->spi = spi;
 	//WT
+	//WT
+        printk(KERN_INFO "clchiu says hello\n");
         phy->device_id = id;
 	ret = ad9371_alloc_mykonos_device(phy);
 	if (ret < 0)
